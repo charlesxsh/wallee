@@ -9,6 +9,10 @@
 //! This library provides [`wallee::Error`][Error], a trait object based error
 //! type for easy idiomatic error handling in Rust applications.
 //!
+//! This crate is a fork of [`anyhow`] with support for caller location tracking. This is
+//! useful when debug information is not included in the build. The caller location attached to
+//! [`wallee::Error`][Error] still includes the file, line and column where the error originated.
+//!
 //! <br>
 //!
 //! # Details
@@ -211,11 +215,7 @@
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(dead_code, unused_imports, unused_mut)]
-#![cfg_attr(
-    not(wallee_no_unsafe_op_in_unsafe_fn_lint),
-    deny(unsafe_op_in_unsafe_fn)
-)]
-#![cfg_attr(wallee_no_unsafe_op_in_unsafe_fn_lint, allow(unused_unsafe))]
+#![deny(unsafe_op_in_unsafe_fn)]
 // #![allow(
 //     clippy::doc_markdown,
 //     clippy::enum_glob_use,
@@ -679,9 +679,6 @@ pub mod __private {
     #[cold]
     #[track_caller]
     pub fn format_err(args: Arguments) -> Error {
-        #[cfg(wallee_no_fmt_arguments_as_str)]
-        let fmt_arguments_as_str = None::<&str>;
-        #[cfg(not(wallee_no_fmt_arguments_as_str))]
         let fmt_arguments_as_str = args.as_str();
 
         if let Some(message) = fmt_arguments_as_str {
