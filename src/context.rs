@@ -10,6 +10,7 @@ mod ext {
     use super::*;
 
     pub trait StdError {
+        #[track_caller]
         fn ext_context<C>(self, context: C) -> Error
         where
             C: Display + Send + Sync + 'static;
@@ -70,7 +71,7 @@ where
 /// ```
 /// # type T = ();
 /// #
-/// use anyhow::{Context, Result};
+/// use wallee::{Context, Result};
 ///
 /// fn maybe_get() -> Option<T> {
 ///     # const IGNORE: &str = stringify! {
@@ -118,10 +119,11 @@ where
     E: Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Error")
-            .field("context", &Quoted(&self.context))
-            .field("source", &self.error)
-            .finish()
+        // f.debug_struct("Error")
+        //     .field("context", &Quoted(&self.context))
+        //     .field("source", &self.error)
+        //     .finish()
+        Debug::fmt(&Quoted(&self.context), f)
     }
 }
 
@@ -154,7 +156,8 @@ where
     C: Display,
 {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
-        Some(unsafe { crate::ErrorImpl::error(self.error.inner.by_ref()) })
+        // Some(unsafe { crate::ErrorImpl::error(self.error.inner.by_ref()) })
+        Some(unsafe { crate::ErrorImpl::as_super(self.error.inner.as_ref()) })
     }
 
     #[cfg(error_generic_member_access)]

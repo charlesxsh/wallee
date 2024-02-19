@@ -5,10 +5,10 @@ mod drop;
 
 use self::common::*;
 use self::drop::{DetectDrop, Flag};
-use anyhow::Error;
 use std::error::Error as StdError;
 use std::fmt::{self, Display};
 use std::io;
+use wallee::Error;
 
 #[test]
 fn test_downcast() {

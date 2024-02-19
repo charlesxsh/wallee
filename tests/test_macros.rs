@@ -1,19 +1,19 @@
-#![allow(
-    clippy::assertions_on_result_states,
-    clippy::eq_op,
-    clippy::incompatible_msrv, // https://github.com/rust-lang/rust-clippy/issues/12257
-    clippy::items_after_statements,
-    clippy::needless_pass_by_value,
-    clippy::shadow_unrelated,
-    clippy::wildcard_imports
-)]
+// #![allow(
+//     clippy::assertions_on_result_states,
+//     clippy::eq_op,
+//     clippy::incompatible_msrv, // https://github.com/rust-lang/rust-clippy/issues/12257
+//     clippy::items_after_statements,
+//     clippy::needless_pass_by_value,
+//     clippy::shadow_unrelated,
+//     clippy::wildcard_imports
+// )]
 
 mod common;
 
 use self::common::*;
-use anyhow::{anyhow, ensure};
 use std::cell::Cell;
 use std::future;
+use wallee::{ensure, wallee};
 
 #[test]
 fn test_messages() {
@@ -58,11 +58,11 @@ fn test_temporaries() {
     fn require_send_sync(_: impl Send + Sync) {}
 
     require_send_sync(async {
-        // If anyhow hasn't dropped any temporary format_args it creates by the
+        // If wallee hasn't dropped any temporary format_args it creates by the
         // time it's done evaluating, those will stick around until the
         // semicolon, which is on the other side of the await point, making the
         // enclosing future non-Send.
-        future::ready(anyhow!("...")).await;
+        future::ready(wallee!("...")).await;
     });
 
     fn message(cell: Cell<&str>) -> &str {
@@ -70,12 +70,12 @@ fn test_temporaries() {
     }
 
     require_send_sync(async {
-        future::ready(anyhow!(message(Cell::new("...")))).await;
+        future::ready(wallee!(message(Cell::new("...")))).await;
     });
 }
 
 #[test]
 fn test_brace_escape() {
-    let err = anyhow!("unterminated ${{..}} expression");
+    let err = wallee!("unterminated ${{..}} expression");
     assert_eq!("unterminated ${..} expression", err.to_string());
 }

@@ -3,9 +3,9 @@
 mod drop;
 
 use self::drop::{DetectDrop, Flag};
-use anyhow::Error;
 use std::marker::Unpin;
 use std::mem;
+use wallee::Error;
 
 #[test]
 fn test_error_size() {

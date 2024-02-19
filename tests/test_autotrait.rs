@@ -1,6 +1,6 @@
 #![allow(clippy::extra_unused_type_parameters)]
 
-use anyhow::Error;
+use wallee::Error;
 
 #[test]
 fn test_send() {

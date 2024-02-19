@@ -22,13 +22,13 @@
 )]
 
 use self::Enum::Generic;
-use anyhow::{anyhow, ensure, Chain, Error, Result};
 use std::fmt::{self, Debug};
 use std::iter;
 use std::marker::{PhantomData, PhantomData as P};
 use std::mem;
 use std::ops::Add;
 use std::ptr;
+use wallee::{ensure, wallee, Chain, Error, Result};
 
 struct S;
 
@@ -310,10 +310,10 @@ fn test_path() {
     let test = || Ok(ensure!(crate::S.t(1) == 2));
     assert_err(test, "Condition failed: `crate::S.t(1) == 2` (1 vs 2)");
 
-    let test = || Ok(ensure!(::anyhow::Error::root_cause.t(1) == 2));
+    let test = || Ok(ensure!(::wallee::Error::root_cause.t(1) == 2));
     assert_err(
         test,
-        "Condition failed: `::anyhow::Error::root_cause.t(1) == 2` (1 vs 2)",
+        "Condition failed: `::wallee::Error::root_cause.t(1) == 2` (1 vs 2)",
     );
 
     let test = || Ok(ensure!(Error::msg::<&str>.t(1) == 2));
@@ -405,10 +405,10 @@ fn test_path() {
 
 #[test]
 fn test_macro() {
-    let test = || Ok(ensure!(anyhow!("...").to_string().len() <= 1));
+    let test = || Ok(ensure!(wallee!("...").to_string().len() <= 1));
     assert_err(
         test,
-        "Condition failed: `anyhow!(\"...\").to_string().len() <= 1` (3 vs 1)",
+        "Condition failed: `wallee!(\"...\").to_string().len() <= 1` (3 vs 1)",
     );
 
     let test = || Ok(ensure!(vec![1].len() < 1));
@@ -446,7 +446,7 @@ fn test_trailer() {
     let test = || Ok(ensure!((2, (3, 4)). 1.1 == 2));
     assert_err(test, "Condition failed: `(2, (3, 4)).1.1 == 2` (4 vs 2)");
 
-    let err = anyhow!("");
+    let err = wallee!("");
     let test = || Ok(ensure!(err.is::<&str>() == false));
     assert_err(
         test,

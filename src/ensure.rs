@@ -823,17 +823,17 @@ macro_rules! __fallback_ensure {
     };
     ($cond:expr, $msg:literal $(,)?) => {
         if !$cond {
-            return $crate::__private::Err($crate::__anyhow!($msg));
+            return $crate::__private::Err($crate::__wallee!($msg));
         }
     };
     ($cond:expr, $err:expr $(,)?) => {
         if !$cond {
-            return $crate::__private::Err($crate::__anyhow!($err));
+            return $crate::__private::Err($crate::__wallee!($err));
         }
     };
     ($cond:expr, $fmt:expr, $($arg:tt)*) => {
         if !$cond {
-            return $crate::__private::Err($crate::__anyhow!($fmt, $($arg)*));
+            return $crate::__private::Err($crate::__wallee!($fmt, $($arg)*));
         }
     };
 }

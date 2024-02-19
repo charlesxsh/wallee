@@ -8,8 +8,8 @@ fn test_backtrace() {}
 #[rustversion::nightly]
 #[test]
 fn test_backtrace() {
-    use anyhow::anyhow;
+    use wallee::wallee;
 
-    let error = anyhow!("oh no!");
+    let error = wallee!("oh no!");
     let _ = error.backtrace();
 }

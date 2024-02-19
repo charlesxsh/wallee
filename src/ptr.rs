@@ -3,20 +3,20 @@ use core::marker::PhantomData;
 use core::ptr::NonNull;
 
 #[repr(transparent)]
-pub struct Own<T>
+pub struct OwnPtr<T>
 where
     T: ?Sized,
 {
     pub ptr: NonNull<T>,
 }
 
-unsafe impl<T> Send for Own<T> where T: ?Sized {}
+unsafe impl<T> Send for OwnPtr<T> where T: ?Sized {}
 
-unsafe impl<T> Sync for Own<T> where T: ?Sized {}
+unsafe impl<T> Sync for OwnPtr<T> where T: ?Sized {}
 
-impl<T> Copy for Own<T> where T: ?Sized {}
+impl<T> Copy for OwnPtr<T> where T: ?Sized {}
 
-impl<T> Clone for Own<T>
+impl<T> Clone for OwnPtr<T>
 where
     T: ?Sized,
 {
@@ -25,18 +25,18 @@ where
     }
 }
 
-impl<T> Own<T>
+impl<T> OwnPtr<T>
 where
     T: ?Sized,
 {
     pub fn new(ptr: Box<T>) -> Self {
-        Own {
+        OwnPtr {
             ptr: unsafe { NonNull::new_unchecked(Box::into_raw(ptr)) },
         }
     }
 
-    pub fn cast<U: CastTo>(self) -> Own<U::Target> {
-        Own {
+    pub fn cast<U: CastTo>(self) -> OwnPtr<U::Target> {
+        OwnPtr {
             ptr: self.ptr.cast(),
         }
     }
@@ -45,15 +45,15 @@ where
         unsafe { Box::from_raw(self.ptr.as_ptr()) }
     }
 
-    pub fn by_ref(&self) -> Ref<T> {
-        Ref {
+    pub fn as_ref(&self) -> RefPtr<T> {
+        RefPtr {
             ptr: self.ptr,
             lifetime: PhantomData,
         }
     }
 
-    pub fn by_mut(&mut self) -> Mut<T> {
-        Mut {
+    pub fn as_mut(&mut self) -> MutPtr<T> {
+        MutPtr {
             ptr: self.ptr,
             lifetime: PhantomData,
         }
@@ -61,7 +61,7 @@ where
 }
 
 #[repr(transparent)]
-pub struct Ref<'a, T>
+pub struct RefPtr<'a, T>
 where
     T: ?Sized,
 {
@@ -69,9 +69,9 @@ where
     lifetime: PhantomData<&'a T>,
 }
 
-impl<'a, T> Copy for Ref<'a, T> where T: ?Sized {}
+impl<'a, T> Copy for RefPtr<'a, T> where T: ?Sized {}
 
-impl<'a, T> Clone for Ref<'a, T>
+impl<'a, T> Clone for RefPtr<'a, T>
 where
     T: ?Sized,
 {
@@ -80,12 +80,12 @@ where
     }
 }
 
-impl<'a, T> Ref<'a, T>
+impl<'a, T> RefPtr<'a, T>
 where
     T: ?Sized,
 {
     pub fn new(ptr: &'a T) -> Self {
-        Ref {
+        RefPtr {
             ptr: NonNull::from(ptr),
             lifetime: PhantomData,
         }
@@ -93,22 +93,22 @@ where
 
     #[cfg(not(anyhow_no_ptr_addr_of))]
     pub fn from_raw(ptr: NonNull<T>) -> Self {
-        Ref {
+        RefPtr {
             ptr,
             lifetime: PhantomData,
         }
     }
 
-    pub fn cast<U: CastTo>(self) -> Ref<'a, U::Target> {
-        Ref {
+    pub fn cast<U: CastTo>(self) -> RefPtr<'a, U::Target> {
+        RefPtr {
             ptr: self.ptr.cast(),
             lifetime: PhantomData,
         }
     }
 
     #[cfg(not(anyhow_no_ptr_addr_of))]
-    pub fn by_mut(self) -> Mut<'a, T> {
-        Mut {
+    pub fn by_mut(self) -> MutPtr<'a, T> {
+        MutPtr {
             ptr: self.ptr,
             lifetime: PhantomData,
         }
@@ -119,13 +119,13 @@ where
         self.ptr.as_ptr() as *const T
     }
 
-    pub unsafe fn deref(self) -> &'a T {
-        unsafe { &*self.ptr.as_ptr() }
+    pub fn as_ref(self) -> &'a T {
+        unsafe { self.ptr.as_ref() }
     }
 }
 
 #[repr(transparent)]
-pub struct Mut<'a, T>
+pub struct MutPtr<'a, T>
 where
     T: ?Sized,
 {
@@ -133,9 +133,9 @@ where
     lifetime: PhantomData<&'a mut T>,
 }
 
-impl<'a, T> Copy for Mut<'a, T> where T: ?Sized {}
+impl<'a, T> Copy for MutPtr<'a, T> where T: ?Sized {}
 
-impl<'a, T> Clone for Mut<'a, T>
+impl<'a, T> Clone for MutPtr<'a, T>
 where
     T: ?Sized,
 {
@@ -144,35 +144,35 @@ where
     }
 }
 
-impl<'a, T> Mut<'a, T>
+impl<'a, T> MutPtr<'a, T>
 where
     T: ?Sized,
 {
     #[cfg(anyhow_no_ptr_addr_of)]
     pub fn new(ptr: &'a mut T) -> Self {
-        Mut {
+        MutPtr {
             ptr: NonNull::from(ptr),
             lifetime: PhantomData,
         }
     }
 
-    pub fn cast<U: CastTo>(self) -> Mut<'a, U::Target> {
-        Mut {
+    pub fn cast<U: CastTo>(self) -> MutPtr<'a, U::Target> {
+        MutPtr {
             ptr: self.ptr.cast(),
             lifetime: PhantomData,
         }
     }
 
     #[cfg(not(anyhow_no_ptr_addr_of))]
-    pub fn by_ref(self) -> Ref<'a, T> {
-        Ref {
+    pub fn by_ref(self) -> RefPtr<'a, T> {
+        RefPtr {
             ptr: self.ptr,
             lifetime: PhantomData,
         }
     }
 
-    pub fn extend<'b>(self) -> Mut<'b, T> {
-        Mut {
+    pub fn extend<'b>(self) -> MutPtr<'b, T> {
+        MutPtr {
             ptr: self.ptr,
             lifetime: PhantomData,
         }
@@ -183,7 +183,7 @@ where
     }
 }
 
-impl<'a, T> Mut<'a, T> {
+impl<'a, T> MutPtr<'a, T> {
     pub unsafe fn read(self) -> T {
         unsafe { self.ptr.as_ptr().read() }
     }

@@ -1,7 +1,7 @@
-use anyhow::anyhow;
 use std::error::Error as StdError;
 use std::fmt::{self, Display};
 use std::io;
+use wallee::wallee;
 
 #[derive(Debug)]
 enum TestError {
@@ -26,37 +26,37 @@ impl StdError for TestError {
 
 #[test]
 fn test_literal_source() {
-    let error = anyhow!("oh no!");
+    let error = wallee!("oh no!");
     assert!(error.source().is_none());
 }
 
 #[test]
 fn test_variable_source() {
     let msg = "oh no!";
-    let error = anyhow!(msg);
+    let error = wallee!(msg);
     assert!(error.source().is_none());
 
     let msg = msg.to_owned();
-    let error = anyhow!(msg);
+    let error = wallee!(msg);
     assert!(error.source().is_none());
 }
 
 #[test]
 fn test_fmt_source() {
-    let error = anyhow!("{} {}!", "oh", "no");
+    let error = wallee!("{} {}!", "oh", "no");
     assert!(error.source().is_none());
 }
 
 #[test]
 fn test_io_source() {
     let io = io::Error::new(io::ErrorKind::Other, "oh no!");
-    let error = anyhow!(TestError::Io(io));
+    let error = wallee!(TestError::Io(io));
     assert_eq!("oh no!", error.source().unwrap().to_string());
 }
 
 #[test]
-fn test_anyhow_from_anyhow() {
-    let error = anyhow!("oh no!").context("context");
-    let error = anyhow!(error);
+fn test_wallee_from_wallee() {
+    let error = wallee!("oh no!").context("context");
+    let error = wallee!(error);
     assert_eq!("oh no!", error.source().unwrap().to_string());
 }

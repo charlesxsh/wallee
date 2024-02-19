@@ -1,5 +1,5 @@
-use anyhow::{bail, Result};
 use std::io;
+use wallee::{bail, Result};
 
 pub fn bail_literal() -> Result<()> {
     bail!("oh no!");

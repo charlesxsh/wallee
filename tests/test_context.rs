@@ -6,9 +6,9 @@
 mod drop;
 
 use crate::drop::{DetectDrop, Flag};
-use anyhow::{Context, Error, Result};
 use std::fmt::{self, Display};
 use thiserror::Error;
+use wallee::{Context, Error, Result};
 
 // https://github.com/dtolnay/anyhow/issues/18
 #[test]

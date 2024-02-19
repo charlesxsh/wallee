@@ -1,16 +1,16 @@
 /// Return early with an error.
 ///
-/// This macro is equivalent to `return Err(`[`anyhow!($args...)`][anyhow!]`)`.
+/// This macro is equivalent to `return Err(`[`wallee!($args...)`][wallee!]`)`.
 ///
 /// The surrounding function's or closure's return value is required to be
-/// `Result<_,`[`anyhow::Error`][crate::Error]`>`.
+/// `Result<_,`[`wallee::Error`][crate::Error]`>`.
 ///
-/// [anyhow!]: crate::anyhow
+/// [wallee!]: crate::wallee
 ///
 /// # Example
 ///
 /// ```
-/// # use anyhow::{bail, Result};
+/// # use wallee::{bail, Result};
 /// #
 /// # fn has_permission(user: usize, resource: usize) -> bool {
 /// #     true
@@ -28,7 +28,7 @@
 /// ```
 ///
 /// ```
-/// # use anyhow::{bail, Result};
+/// # use wallee::{bail, Result};
 /// # use thiserror::Error;
 /// #
 /// # const MAX_DEPTH: usize = 1;
@@ -55,34 +55,34 @@
 #[macro_export]
 macro_rules! bail {
     ($msg:literal $(,)?) => {
-        return $crate::__private::Err($crate::__anyhow!($msg))
+        return $crate::__private::Err($crate::__wallee!($msg))
     };
     ($err:expr $(,)?) => {
-        return $crate::__private::Err($crate::__anyhow!($err))
+        return $crate::__private::Err($crate::__wallee!($err))
     };
     ($fmt:expr, $($arg:tt)*) => {
-        return $crate::__private::Err($crate::__anyhow!($fmt, $($arg)*))
+        return $crate::__private::Err($crate::__wallee!($fmt, $($arg)*))
     };
 }
 
 /// Return early with an error if a condition is not satisfied.
 ///
 /// This macro is equivalent to `if !$cond { return
-/// Err(`[`anyhow!($args...)`][anyhow!]`); }`.
+/// Err(`[`wallee!($args...)`][wallee!]`); }`.
 ///
 /// The surrounding function's or closure's return value is required to be
-/// `Result<_,`[`anyhow::Error`][crate::Error]`>`.
+/// `Result<_,`[`wallee::Error`][crate::Error]`>`.
 ///
 /// Analogously to `assert!`, `ensure!` takes a condition and exits the function
 /// if the condition fails. Unlike `assert!`, `ensure!` returns an `Error`
 /// rather than panicking.
 ///
-/// [anyhow!]: crate::anyhow
+/// [wallee!]: crate::wallee
 ///
 /// # Example
 ///
 /// ```
-/// # use anyhow::{ensure, Result};
+/// # use wallee::{ensure, Result};
 /// #
 /// # fn main() -> Result<()> {
 /// #     let user = 0;
@@ -93,7 +93,7 @@ macro_rules! bail {
 /// ```
 ///
 /// ```
-/// # use anyhow::{ensure, Result};
+/// # use wallee::{ensure, Result};
 /// # use thiserror::Error;
 /// #
 /// # const MAX_DEPTH: usize = 1;
@@ -127,17 +127,17 @@ macro_rules! ensure {
     };
     ($cond:expr, $msg:literal $(,)?) => {
         if !$cond {
-            return $crate::__private::Err($crate::__anyhow!($msg));
+            return $crate::__private::Err($crate::__wallee!($msg));
         }
     };
     ($cond:expr, $err:expr $(,)?) => {
         if !$cond {
-            return $crate::__private::Err($crate::__anyhow!($err));
+            return $crate::__private::Err($crate::__wallee!($err));
         }
     };
     ($cond:expr, $fmt:expr, $($arg:tt)*) => {
         if !$cond {
-            return $crate::__private::Err($crate::__anyhow!($fmt, $($arg)*));
+            return $crate::__private::Err($crate::__wallee!($fmt, $($arg)*));
         }
     };
 }
@@ -158,7 +158,7 @@ macro_rules! ensure {
     };
 }
 
-/// Construct an ad-hoc error from a string or existing non-`anyhow` error
+/// Construct an ad-hoc error from a string or existing non-`wallee` error
 /// value.
 ///
 /// This evaluates to an [`Error`][crate::Error]. It can take either just a
@@ -168,18 +168,18 @@ macro_rules! ensure {
 /// If called with a single argument whose type implements `std::error::Error`
 /// (in addition to `Debug` and `Display`, which are always required), then that
 /// Error impl's `source` is preserved as the `source` of the resulting
-/// `anyhow::Error`.
+/// `wallee::Error`.
 ///
 /// # Example
 ///
 /// ```
 /// # type V = ();
 /// #
-/// use anyhow::{anyhow, Result};
+/// use wallee::{wallee, Result};
 ///
 /// fn lookup(key: &str) -> Result<V> {
 ///     if key.len() != 16 {
-///         return Err(anyhow!("key length must be 16 characters, got {:?}", key));
+///         return Err(wallee!("key length must be 16 characters, got {:?}", key));
 ///     }
 ///
 ///     // ...
@@ -187,7 +187,7 @@ macro_rules! ensure {
 /// }
 /// ```
 #[macro_export]
-macro_rules! anyhow {
+macro_rules! wallee {
     ($msg:literal $(,)?) => {
         $crate::__private::must_use({
             let error = $crate::__private::format_err($crate::__private::format_args!($msg));
@@ -198,7 +198,7 @@ macro_rules! anyhow {
         $crate::__private::must_use({
             use $crate::__private::kind::*;
             let error = match $err {
-                error => (&error).anyhow_kind().new(error),
+                error => (&error).wallee_kind().make(error),
             };
             error
         })
@@ -213,7 +213,7 @@ macro_rules! anyhow {
 // to be used.
 #[doc(hidden)]
 #[macro_export]
-macro_rules! __anyhow {
+macro_rules! __wallee {
     ($msg:literal $(,)?) => ({
         let error = $crate::__private::format_err($crate::__private::format_args!($msg));
         error
@@ -221,7 +221,7 @@ macro_rules! __anyhow {
     ($err:expr $(,)?) => ({
         use $crate::__private::kind::*;
         let error = match $err {
-            error => (&error).anyhow_kind().new(error),
+            error => (&error).wallee_kind().make(error),
         };
         error
     });

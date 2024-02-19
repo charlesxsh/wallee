@@ -1,7 +1,7 @@
-use anyhow::{anyhow, Chain, Error};
+use wallee::{wallee, Chain, Error};
 
 fn error() -> Error {
-    anyhow!({ 0 }).context(1).context(2).context(3)
+    wallee!({ 0 }).context(1).context(2).context(3)
 }
 
 #[test]

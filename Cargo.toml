@@ -1,15 +1,15 @@
 [package]
-name = "anyhow"
-version = "1.0.79"
-authors = ["David Tolnay <dtolnay@gmail.com>"]
+name = "wallee"
+version = "0.1.0"
+authors = ["David Tolnay <dtolnay@gmail.com>", "Todd Hardman <todd.hardman@gmail.com>"]
 categories = ["rust-patterns", "no-std"]
 description = "Flexible concrete Error type built on std::error::Error"
-documentation = "https://docs.rs/anyhow"
+documentation = "https://docs.rs/wallee"
 edition = "2018"
 keywords = ["error", "error-handling"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/dtolnay/anyhow"
-rust-version = "1.39"
+repository = "https://github.com/tjhardman/wallee"
+rust-version = "1.76"
 
 [features]
 default = ["std"]

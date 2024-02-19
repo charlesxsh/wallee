@@ -3,8 +3,8 @@
 mod drop;
 
 use self::drop::{DetectDrop, Flag};
-use anyhow::{Error, Result};
 use std::error::Error as StdError;
+use wallee::{Error, Result};
 
 #[test]
 fn test_convert() {

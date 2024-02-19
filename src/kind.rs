@@ -1,6 +1,6 @@
-// Tagged dispatch mechanism for resolving the behavior of `anyhow!($expr)`.
+// Tagged dispatch mechanism for resolving the behavior of `wallee!($expr)`.
 //
-// When anyhow! is given a single expr argument to turn into anyhow::Error, we
+// When wallee! is given a single expr argument to turn into wallee::Error, we
 // want the resulting Error to pick up the input's implementation of source()
 // and backtrace() if it has a std::error::Error impl, otherwise require nothing
 // more than Display and Debug.
@@ -31,18 +31,18 @@
 //
 // Since specialization is not stable yet, instead we rely on autoref behavior
 // of method resolution to perform tagged dispatch. Here we have two traits
-// AdhocKind and TraitKind that both have an anyhow_kind() method. AdhocKind is
+// AdhocKind and TraitKind that both have an wallee_kind() method. AdhocKind is
 // implemented whether or not the caller's type has a std error impl, while
 // TraitKind is implemented only when a std error impl does exist. The ambiguity
 // is resolved by AdhocKind requiring an extra autoref so that it has lower
 // precedence.
 //
-// The anyhow! macro will set up the call in this form:
+// The wallee! macro will set up the call in this form:
 //
 //     #[allow(unused_imports)]
 //     use $crate::__private::{AdhocKind, TraitKind};
 //     let error = $msg;
-//     (&error).anyhow_kind().new(error)
+//     (&error).wallee_kind().new(error)
 
 use crate::Error;
 use core::fmt::{Debug, Display};
@@ -55,7 +55,7 @@ pub struct Adhoc;
 #[doc(hidden)]
 pub trait AdhocKind: Sized {
     #[inline]
-    fn anyhow_kind(&self) -> Adhoc {
+    fn wallee_kind(&self) -> Adhoc {
         Adhoc
     }
 }
@@ -64,7 +64,8 @@ impl<T> AdhocKind for &T where T: ?Sized + Display + Debug + Send + Sync + 'stat
 
 impl Adhoc {
     #[cold]
-    pub fn new<M>(self, message: M) -> Error
+    #[track_caller]
+    pub fn make<M>(self, message: M) -> Error
     where
         M: Display + Debug + Send + Sync + 'static,
     {
@@ -77,20 +78,24 @@ pub struct Trait;
 #[doc(hidden)]
 pub trait TraitKind: Sized {
     #[inline]
-    fn anyhow_kind(&self) -> Trait {
+    fn wallee_kind(&self) -> Trait {
         Trait
     }
 }
 
-impl<E> TraitKind for E where E: Into<Error> {}
+// impl<E> TraitKind for E where E: Into<Error> {}
+impl<E> TraitKind for E where Error: From<E> {}
 
 impl Trait {
     #[cold]
-    pub fn new<E>(self, error: E) -> Error
+    #[track_caller]
+    pub fn make<E>(self, error: E) -> Error
     where
-        E: Into<Error>,
+        // E: Into<Error>,
+        Error: From<E>,
     {
-        error.into()
+        // error.into()
+        Error::from(error)
     }
 }
 
@@ -101,7 +106,7 @@ pub struct Boxed;
 #[doc(hidden)]
 pub trait BoxedKind: Sized {
     #[inline]
-    fn anyhow_kind(&self) -> Boxed {
+    fn wallee_kind(&self) -> Boxed {
         Boxed
     }
 }
@@ -112,7 +117,8 @@ impl BoxedKind for Box<dyn StdError + Send + Sync> {}
 #[cfg(feature = "std")]
 impl Boxed {
     #[cold]
-    pub fn new(self, error: Box<dyn StdError + Send + Sync>) -> Error {
+    #[track_caller]
+    pub fn make(self, error: Box<dyn StdError + Send + Sync>) -> Error {
         let backtrace = backtrace_if_absent!(&*error);
         Error::from_boxed(error, backtrace)
     }

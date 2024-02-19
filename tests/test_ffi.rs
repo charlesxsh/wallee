@@ -1,18 +1,18 @@
 #![deny(improper_ctypes, improper_ctypes_definitions)]
 
-use anyhow::anyhow;
+use wallee::wallee;
 
 #[no_mangle]
-pub extern "C" fn anyhow1(err: anyhow::Error) {
+pub extern "C" fn wallee1(err: wallee::Error) {
     println!("{:?}", err);
 }
 
 #[no_mangle]
-pub extern "C" fn anyhow2(err: &mut Option<anyhow::Error>) {
-    *err = Some(anyhow!("ffi error"));
+pub extern "C" fn wallee2(err: &mut Option<wallee::Error>) {
+    *err = Some(wallee!("ffi error"));
 }
 
 #[no_mangle]
-pub extern "C" fn anyhow3() -> Option<anyhow::Error> {
-    Some(anyhow!("ffi error"))
+pub extern "C" fn wallee3() -> Option<wallee::Error> {
+    Some(wallee!("ffi error"))
 }
