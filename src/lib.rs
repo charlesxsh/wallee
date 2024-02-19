@@ -9,7 +9,7 @@
 //! This library provides [`wallee::Error`][Error], a trait object based error
 //! type for easy idiomatic error handling in Rust applications.
 //!
-//! This crate is a fork of Anyhow with support for
+//! This crate is a fork of Wallee with support for
 //! caller location tracking. This is useful when debug information is not included in the build.
 //! The caller location attached to [`wallee::Error`][Error] still includes the file, line and
 //! column where the error originated.
@@ -133,10 +133,9 @@
 //!   # ;
 //!   ```
 //!
-//! - If using Rust &ge; 1.65, a backtrace is captured and printed with the
-//!   error if the underlying error type does not already provide its own. In
-//!   order to see backtraces, they must be enabled through the environment
-//!   variables described in [`std::backtrace`]:
+//! - A backtrace is captured and printed with the error if the underlying error
+//!   type does not already provide its own. In order to see backtraces, they must
+//!   be enabled through the environment variables described in [`std::backtrace`]:
 //!
 //!   - If you want panics and errors to both have backtraces, set
 //!     `RUST_BACKTRACE=1`;
@@ -146,7 +145,7 @@
 //!
 //!   [`std::backtrace`]: https://doc.rust-lang.org/std/backtrace/index.html#environment-variables
 //!
-//! - Anyhow works with any error type that has an impl of `std::error::Error`,
+//! - Wallee works with any error type that has an impl of `std::error::Error`,
 //!   including ones defined in your crate. We do not bundle a `derive(Error)`
 //!   macro but you can write the impls yourself or use a standalone macro like
 //!   [thiserror].
@@ -169,7 +168,7 @@
 //!   ```
 //!
 //! - One-off error messages can be constructed using the `wallee!` macro, which
-//!   supports string interpolation and produces an `wallee::Error`.
+//!   supports string interpolation and produces a `wallee::Error`.
 //!
 //!   ```
 //!   # use wallee::{wallee, Result};
@@ -198,18 +197,18 @@
 //! # No-std support
 //!
 //! In no_std mode, the same API is almost all available and works the same way.
-//! To depend on Anyhow in no_std mode, disable our default enabled "std"
+//! To depend on Wallee in no_std mode, disable our default enabled "std"
 //! feature in Cargo.toml. A global allocator is required.
 //!
 //! ```toml
 //! [dependencies]
-//! wallee = { version = "1.0", default-features = false }
+//! wallee = { version = "0.1", default-features = false }
 //! ```
 //!
 //! Since the `?`-based error conversions would normally rely on the
 //! `std::error::Error` trait which is only available through std, no_std mode
 //! will require an explicit `.map_err(Error::msg)` when working with a
-//! non-Anyhow error type inside a function that returns Anyhow's error type.
+//! non-Wallee error type inside a function that returns Wallee's error type.
 
 #![doc(html_root_url = "https://docs.rs/wallee/1.0.79")]
 #![cfg_attr(error_generic_member_access, feature(error_generic_member_access))]
@@ -217,27 +216,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(dead_code, unused_imports, unused_mut)]
 #![deny(unsafe_op_in_unsafe_fn)]
-// #![allow(
-//     clippy::doc_markdown,
-//     clippy::enum_glob_use,
-//     clippy::explicit_auto_deref,
-//     clippy::extra_unused_type_parameters,
-//     clippy::incompatible_msrv,
-//     clippy::let_underscore_untyped,
-//     clippy::missing_errors_doc,
-//     clippy::missing_panics_doc,
-//     clippy::module_name_repetitions,
-//     clippy::must_use_candidate,
-//     clippy::needless_doctest_main,
-//     clippy::new_ret_no_self,
-//     clippy::redundant_else,
-//     clippy::return_self_not_must_use,
-//     clippy::struct_field_names,
-//     clippy::unused_self,
-//     clippy::used_underscore_binding,
-//     clippy::wildcard_imports,
-//     clippy::wrong_self_convention
-// )]
 
 #[cfg(all(
     wallee_nightly_testing,
@@ -315,12 +293,18 @@ pub use wallee as format_err;
 /// Failed to read instrs from ./path/to/instrs.json: No such file or directory (os error 2)
 /// ```
 ///
-/// The Debug format "{:?}" includes your backtrace if one was captured. Note
+/// The Debug format "{:?}" includes the caller location. Note
 /// that this is the representation you get by default if you return an error
 /// from `fn main` instead of printing it explicitly yourself.
 ///
 /// ```console
-/// Error: Failed to read instrs from ./path/to/instrs.json
+/// src/main.rs(5:8): Failed to read instrs from ./path/to/instrs.json
+/// ```
+///
+/// The alternate Debug format "{:#?}" includes your backtrace if one was captured.
+///
+/// ```console
+/// Error: src/main.rs(5:8): Failed to read instrs from ./path/to/instrs.json
 ///
 /// Caused by:
 ///     No such file or directory (os error 2)
@@ -329,7 +313,7 @@ pub use wallee as format_err;
 /// and if there is a backtrace available:
 ///
 /// ```console
-/// Error: Failed to read instrs from ./path/to/instrs.json
+/// Error: src/main.rs(5:8): Failed to read instrs from ./path/to/instrs.json
 ///
 /// Caused by:
 ///     No such file or directory (os error 2)
@@ -348,19 +332,6 @@ pub use wallee as format_err;
 ///    5: main
 ///    6: __libc_start_main
 ///    7: _start
-/// ```
-///
-/// To see a conventional struct-style Debug representation, use "{:#?}".
-///
-/// ```console
-/// Error {
-///     context: "Failed to read instrs from ./path/to/instrs.json",
-///     source: Os {
-///         code: 2,
-///         kind: NotFound,
-///         message: "No such file or directory",
-///     },
-/// }
 /// ```
 ///
 /// If none of the built-in representations are appropriate and you would prefer
@@ -509,7 +480,7 @@ pub type Result<T, E = Error> = core::result::Result<T, E>;
 /// level underlying causes would be enumerated below.
 ///
 /// ```console
-/// Error: Failed to read instrs from ./path/to/instrs.json
+/// Error: src/main.rs(5:8): Failed to read instrs from ./path/to/instrs.json
 ///
 /// Caused by:
 ///     No such file or directory (os error 2)
@@ -527,7 +498,7 @@ pub type Result<T, E = Error> = core::result::Result<T, E>;
 /// After attaching context of type `C` onto an error of type `E`, the resulting
 /// `wallee::Error` may be downcast to `C` **or** to `E`.
 ///
-/// That is, in codebases that rely on downcasting, Anyhow's context supports
+/// That is, in codebases that rely on downcasting, Wallee's context supports
 /// both of the following use cases:
 ///
 ///   - **Attaching context whose type is insignificant onto errors whose type
@@ -535,7 +506,7 @@ pub type Result<T, E = Error> = core::result::Result<T, E>;
 ///
 ///     In other error libraries whose context is not designed this way, it can
 ///     be risky to introduce context to existing code because new context might
-///     break existing working downcasts. In Anyhow, any downcast that worked
+///     break existing working downcasts. In Wallee, any downcast that worked
 ///     before adding context will continue to work after you add a context, so
 ///     you should freely add human-readable context to errors wherever it would
 ///     be helpful.
