@@ -50,25 +50,21 @@ where
 
 impl<M> StdError for DisplayError<M> where M: Display + 'static {}
 
-#[cfg(feature = "std")]
 #[repr(transparent)]
 pub struct BoxedError(pub Box<dyn StdError + Send + Sync>);
 
-#[cfg(feature = "std")]
 impl Debug for BoxedError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         Debug::fmt(&self.0, f)
     }
 }
 
-#[cfg(feature = "std")]
 impl Display for BoxedError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         Display::fmt(&self.0, f)
     }
 }
 
-#[cfg(feature = "std")]
 impl StdError for BoxedError {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         self.0.source()

@@ -192,36 +192,13 @@
 //!   # }
 //!   ```
 //!
-//! <br>
-//!
-//! # No-std support
-//!
-//! In no_std mode, the same API is almost all available and works the same way.
-//! To depend on Wallee in no_std mode, disable our default enabled "std"
-//! feature in Cargo.toml. A global allocator is required.
-//!
-//! ```toml
-//! [dependencies]
-//! wallee = { version = "0.1", default-features = false }
-//! ```
-//!
-//! Since the `?`-based error conversions would normally rely on the
-//! `std::error::Error` trait which is only available through std, no_std mode
-//! will require an explicit `.map_err(Error::msg)` when working with a
-//! non-Wallee error type inside a function that returns Wallee's error type.
 
 #![doc(html_root_url = "https://docs.rs/wallee/1.0.79")]
-#![cfg_attr(error_generic_member_access, feature(error_generic_member_access))]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
-#![cfg_attr(not(feature = "std"), no_std)]
 #![deny(dead_code, unused_imports, unused_mut)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
-#[cfg(all(
-    wallee_nightly_testing,
-    feature = "std",
-    not(error_generic_member_access)
-))]
+#[cfg(wallee_nightly_testing)]
 compile_error!("Build script probe failed to compile.");
 
 extern crate alloc;
@@ -246,18 +223,7 @@ use crate::error::ErrorImpl;
 use crate::ptr::OwnPtr;
 use core::fmt::Display;
 
-#[cfg(not(feature = "std"))]
-use core::fmt::Debug;
-
-#[cfg(feature = "std")]
 use std::error::Error as StdError;
-
-#[cfg(not(feature = "std"))]
-trait StdError: Debug + Display {
-    fn source(&self) -> Option<&(dyn StdError + 'static)> {
-        None
-    }
-}
 
 #[doc(no_inline)]
 pub use wallee as format_err;
@@ -380,8 +346,6 @@ pub struct Error {
 ///     None
 /// }
 /// ```
-#[cfg(feature = "std")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 #[derive(Clone)]
 pub struct Chain<'a> {
     state: crate::chain::ChainState<'a>,
@@ -644,7 +608,6 @@ pub mod __private {
         #[doc(hidden)]
         pub use crate::kind::{AdhocKind, TraitKind};
 
-        #[cfg(feature = "std")]
         #[doc(hidden)]
         pub use crate::kind::BoxedKind;
     }

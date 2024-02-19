@@ -47,7 +47,6 @@
 use crate::Error;
 use core::fmt::{Debug, Display};
 
-#[cfg(feature = "std")]
 use crate::StdError;
 
 pub struct Adhoc;
@@ -99,10 +98,8 @@ impl Trait {
     }
 }
 
-#[cfg(feature = "std")]
 pub struct Boxed;
 
-#[cfg(feature = "std")]
 #[doc(hidden)]
 pub trait BoxedKind: Sized {
     #[inline]
@@ -111,10 +108,8 @@ pub trait BoxedKind: Sized {
     }
 }
 
-#[cfg(feature = "std")]
 impl BoxedKind for Box<dyn StdError + Send + Sync> {}
 
-#[cfg(feature = "std")]
 impl Boxed {
     #[cold]
     #[track_caller]

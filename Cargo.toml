@@ -11,11 +11,6 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/tjhardman/wallee"
 rust-version = "1.76"
 
-[features]
-default = ["std"]
-std = []
-backtrace = []
-
 [dependencies]
 # On compilers older than 1.65, features=["backtrace"] may be used to enable
 # backtraces via the `backtrace` crate. This feature has no effect on 1.65+

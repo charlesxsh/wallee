@@ -16,7 +16,6 @@ mod ext {
             C: Display + Send + Sync + 'static;
     }
 
-    #[cfg(feature = "std")]
     impl<E> StdError for E
     where
         E: std::error::Error + Send + Sync + 'static,

@@ -1,7 +1,6 @@
 use crate::backtrace::Backtrace;
 use crate::chain::Chain;
 use crate::location::Location;
-#[cfg(feature = "std")]
 use crate::ptr::MutPtr;
 use crate::ptr::{OwnPtr, RefPtr};
 use crate::{Error, StdError};
@@ -14,7 +13,6 @@ use core::ptr::NonNull;
 #[cfg(error_generic_member_access)]
 use std::error::{self, Request};
 
-#[cfg(feature = "std")]
 use core::ops::{Deref, DerefMut};
 
 impl Error {
@@ -25,8 +23,6 @@ impl Error {
     ///
     /// If the error type does not provide a backtrace, a backtrace will be
     /// created here to ensure that a backtrace exists.
-    #[cfg(feature = "std")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     #[cold]
     #[must_use]
     #[track_caller]
@@ -85,7 +81,6 @@ impl Error {
         Error::from_adhoc(message, backtrace!())
     }
 
-    #[cfg(feature = "std")]
     #[cold]
     #[track_caller]
     pub(crate) fn from_std<E>(error: E, backtrace: Option<Backtrace>) -> Self
@@ -99,10 +94,6 @@ impl Error {
             object_boxed: object_boxed::<E>,
             object_downcast: object_downcast::<E>,
             object_drop_rest: object_drop_front::<E>,
-            #[cfg(all(
-                not(error_generic_member_access),
-                any(std_backtrace, feature = "backtrace")
-            ))]
             object_backtrace: no_backtrace,
         };
 
@@ -125,10 +116,6 @@ impl Error {
             object_boxed: object_boxed::<MessageError<M>>,
             object_downcast: object_downcast::<M>,
             object_drop_rest: object_drop_front::<M>,
-            #[cfg(all(
-                not(error_generic_member_access),
-                any(std_backtrace, feature = "backtrace")
-            ))]
             object_backtrace: no_backtrace,
         };
 
@@ -152,10 +139,6 @@ impl Error {
             object_boxed: object_boxed::<DisplayError<M>>,
             object_downcast: object_downcast::<M>,
             object_drop_rest: object_drop_front::<M>,
-            #[cfg(all(
-                not(error_generic_member_access),
-                any(std_backtrace, feature = "backtrace")
-            ))]
             object_backtrace: no_backtrace,
         };
 
@@ -164,7 +147,6 @@ impl Error {
         unsafe { Error::construct(error, vtable, backtrace) }
     }
 
-    #[cfg(feature = "std")]
     #[cold]
     #[track_caller]
     pub(crate) fn from_context<C, E>(context: C, error: E, backtrace: Option<Backtrace>) -> Self
@@ -181,10 +163,6 @@ impl Error {
             object_boxed: object_boxed::<ContextError<C, E>>,
             object_downcast: context_downcast::<C, E>,
             object_drop_rest: context_drop_rest::<C, E>,
-            #[cfg(all(
-                not(error_generic_member_access),
-                any(std_backtrace, feature = "backtrace")
-            ))]
             object_backtrace: no_backtrace,
         };
 
@@ -192,7 +170,6 @@ impl Error {
         unsafe { Error::construct(error, vtable, backtrace) }
     }
 
-    #[cfg(feature = "std")]
     #[cold]
     #[track_caller]
     pub(crate) fn from_boxed(
@@ -208,10 +185,6 @@ impl Error {
             object_boxed: object_boxed::<BoxedError>,
             object_downcast: object_downcast::<Box<dyn StdError + Send + Sync>>,
             object_drop_rest: object_drop_front::<Box<dyn StdError + Send + Sync>>,
-            #[cfg(all(
-                not(error_generic_member_access),
-                any(std_backtrace, feature = "backtrace")
-            ))]
             object_backtrace: no_backtrace,
         };
 
@@ -326,10 +299,6 @@ impl Error {
             object_boxed: object_boxed::<ContextError<C, Error>>,
             object_downcast: context_chain_downcast::<C>,
             object_drop_rest: context_chain_drop_rest::<C>,
-            #[cfg(all(
-                not(error_generic_member_access),
-                any(std_backtrace, feature = "backtrace")
-            ))]
             object_backtrace: context_backtrace::<C>,
         };
 
@@ -367,7 +336,6 @@ impl Error {
     /// [dependencies]
     /// wallee = { version = "1.0", features = ["backtrace"] }
     /// ```
-    #[cfg(any(std_backtrace, feature = "backtrace"))]
     pub fn backtrace(&self) -> &impl_backtrace!() {
         unsafe { ErrorImpl::backtrace(self.inner.as_ref()) }
     }
@@ -408,8 +376,6 @@ impl Error {
     ///     None
     /// }
     /// ```
-    #[cfg(feature = "std")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     #[cold]
     pub fn chain(&self) -> Chain {
         unsafe { ErrorImpl::chain(self.inner.as_ref()) }
@@ -420,8 +386,6 @@ impl Error {
     ///
     /// The root cause is the last error in the iterator produced by
     /// [`chain()`][Error::chain].
-    #[cfg(feature = "std")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     pub fn root_cause(&self) -> &(dyn StdError + 'static) {
         self.chain().last().unwrap()
     }
@@ -553,8 +517,6 @@ impl Error {
     }
 }
 
-#[cfg(feature = "std")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 impl<E> From<E> for Error
 where
     E: StdError + Send + Sync + 'static,
@@ -567,8 +529,6 @@ where
     }
 }
 
-#[cfg(feature = "std")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 impl Deref for Error {
     type Target = dyn StdError + Send + Sync + 'static;
 
@@ -577,8 +537,6 @@ impl Deref for Error {
     }
 }
 
-#[cfg(feature = "std")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 impl DerefMut for Error {
     fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe { ErrorImpl::error_mut(self.inner.as_mut()) }
@@ -613,10 +571,6 @@ struct ErrorVTable {
     object_boxed: unsafe fn(OwnPtr<ErrorImpl>) -> Box<dyn StdError + Send + Sync + 'static>,
     object_downcast: unsafe fn(RefPtr<ErrorImpl>, TypeId) -> Option<RefPtr<()>>,
     object_drop_rest: unsafe fn(OwnPtr<ErrorImpl>, TypeId),
-    #[cfg(all(
-        not(error_generic_member_access),
-        any(std_backtrace, feature = "backtrace")
-    ))]
     object_backtrace: unsafe fn(RefPtr<ErrorImpl>) -> Option<&Backtrace>,
 }
 
@@ -693,17 +647,12 @@ where
     }
 }
 
-#[cfg(all(
-    not(error_generic_member_access),
-    any(std_backtrace, feature = "backtrace")
-))]
 fn no_backtrace(e: RefPtr<ErrorImpl>) -> Option<&Backtrace> {
     let _ = e;
     None
 }
 
 // Safety: requires layout of *e to match ErrorImpl<ContextError<C, E>>.
-#[cfg(feature = "std")]
 unsafe fn context_downcast<C, E>(e: RefPtr<ErrorImpl>, target: TypeId) -> Option<RefPtr<()>>
 where
     C: 'static,
@@ -723,7 +672,6 @@ where
 }
 
 // Safety: requires layout of *e to match ErrorImpl<ContextError<C, E>>.
-#[cfg(feature = "std")]
 unsafe fn context_drop_rest<C, E>(e: OwnPtr<ErrorImpl>, target: TypeId)
 where
     C: 'static,
@@ -780,10 +728,6 @@ where
 }
 
 // Safety: requires layout of *e to match ErrorImpl<ContextError<C, Error>>.
-#[cfg(all(
-    not(error_generic_member_access),
-    any(std_backtrace, feature = "backtrace")
-))]
 #[allow(clippy::unnecessary_wraps)]
 unsafe fn context_backtrace<C>(e: RefPtr<ErrorImpl>) -> Option<&Backtrace>
 where
@@ -838,7 +782,6 @@ impl ErrorImpl {
         unsafe { (vtable(this.ptr).object_ref)(this).as_ref() }
     }
 
-    #[cfg(feature = "std")]
     pub(crate) unsafe fn error_mut(
         this: MutPtr<Self>,
     ) -> &mut (dyn StdError + Send + Sync + 'static) {
@@ -856,7 +799,6 @@ impl ErrorImpl {
         unsafe { (vtable(this.ptr).object_super)(this) }
     }
 
-    #[cfg(any(std_backtrace, feature = "backtrace"))]
     pub(crate) unsafe fn backtrace(this: RefPtr<Self>) -> &Backtrace {
         // This unwrap can only panic if the underlying error's backtrace method
         // is nondeterministic, which would only happen in maliciously
@@ -947,14 +889,12 @@ impl From<Error> for Box<dyn StdError + 'static> {
     }
 }
 
-#[cfg(feature = "std")]
 impl AsRef<dyn StdError + Send + Sync> for Error {
     fn as_ref(&self) -> &(dyn StdError + Send + Sync + 'static) {
         &**self
     }
 }
 
-#[cfg(feature = "std")]
 impl AsRef<dyn StdError> for Error {
     fn as_ref(&self) -> &(dyn StdError + 'static) {
         &**self
