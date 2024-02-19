@@ -79,3 +79,56 @@ fn test_brace_escape() {
     let err = wallee!("unterminated ${{..}} expression");
     assert_eq!("unterminated ${..} expression", err.to_string());
 }
+
+#[test]
+fn test_extended_wallee_macro() {
+    use std::io;
+
+    let err = wallee!("oh no!");
+    let s = format!("{err:#}");
+    assert_eq!(s, "oh no!");
+
+    let x = 33;
+    let err = wallee!("oh no! {x}");
+    let s = format!("{err:#}");
+    assert_eq!(s, "oh no! 33");
+
+    let err = wallee!("oh no!: {}", 33);
+    let s = format!("{err:#}");
+    assert_eq!(s, "oh no!: 33");
+
+    let err = wallee!(io::Error::new(io::ErrorKind::PermissionDenied, "oh no!"));
+    let s = format!("{err:#}");
+    assert_eq!(s, "oh no!");
+
+    let err = wallee!(wallee!("oh no!"), "io failed");
+    let s = format!("{err:#}");
+    assert_eq!(s, "io failed: oh no!");
+
+    let err = wallee!(
+        io::Error::new(io::ErrorKind::PermissionDenied, "oh no!"),
+        "io failed"
+    );
+    let s = format!("{err:#}");
+    assert_eq!(s, "io failed: oh no!");
+
+    let x = 33;
+    let err = wallee!(
+        io::Error::new(io::ErrorKind::PermissionDenied, "oh no!"),
+        "io failed {x}"
+    );
+    let s = format!("{err:#}");
+    assert_eq!(s, "io failed 33: oh no!");
+
+    let err = wallee!(
+        io::Error::new(io::ErrorKind::PermissionDenied, "oh no!"),
+        "io failed: {}",
+        33
+    );
+    let s = format!("{err:#}");
+    assert_eq!(s, "io failed: 33: oh no!");
+
+    let err = wallee!(wallee!("oh no!"), format!("io failed: {}", 33));
+    let s = format!("{err:#}");
+    assert_eq!(s, "io failed: 33: oh no!");
+}

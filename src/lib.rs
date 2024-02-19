@@ -693,6 +693,22 @@ pub mod __private {
     #[doc(hidden)]
     #[inline]
     #[cold]
+    #[track_caller]
+    pub fn format_context(error: Error, args: Arguments) -> Error {
+        let fmt_arguments_as_str = args.as_str();
+
+        if let Some(message) = fmt_arguments_as_str {
+            // wallee!("literal"), can downcast to &'static str
+            error.context(message)
+        } else {
+            // wallee!("interpolate {var}"), can downcast to String
+            error.context(fmt::format(args))
+        }
+    }
+
+    #[doc(hidden)]
+    #[inline]
+    #[cold]
     #[must_use]
     pub fn must_use(error: Error) -> Error {
         error

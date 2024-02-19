@@ -194,6 +194,9 @@ macro_rules! wallee {
             error
         })
     };
+    ($fmt:literal, $($arg:tt)*) => {
+        $crate::Error::msg($crate::__private::format!($fmt, $($arg)*))
+    };
     ($err:expr $(,)?) => {
         $crate::__private::must_use({
             use $crate::__private::kind::*;
@@ -203,9 +206,31 @@ macro_rules! wallee {
             error
         })
     };
-    ($fmt:expr, $($arg:tt)*) => {
-        $crate::Error::msg($crate::__private::format!($fmt, $($arg)*))
+    ($err:expr, $context:literal $(,)?) => {
+        $crate::__private::must_use({
+            use $crate::__private::kind::*;
+            let error = match $err {
+                error => (&error).wallee_kind().make(error),
+            };
+            $crate::__private::format_context(error, $crate::__private::format_args!($context))
+        })
     };
+    ($err:expr, $fmt:literal, $($arg:tt)*) => {{
+        use $crate::__private::kind::*;
+        let error = match $err {
+            error => (&error).wallee_kind().make(error),
+        };
+        error.context($crate::__private::format!($fmt, $($arg)*))
+    }};
+    ($err:expr, $context:expr $(,)?) => {
+        $crate::__private::must_use({
+            use $crate::__private::kind::*;
+            let error = match $err {
+                error => (&error).wallee_kind().make(error),
+            };
+            error.context($context)
+        })
+    }
 }
 
 // Not public API. This is used in the implementation of some of the other
