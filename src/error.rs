@@ -235,7 +235,7 @@ impl Error {
     where
         E: StdError + Send + Sync + 'static,
     {
-        let location = *Location::caller();
+        let location = caller!();
 
         let inner: Box<ErrorImpl<E>> = Box::new(ErrorImpl {
             vtable,
