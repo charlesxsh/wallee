@@ -7,7 +7,7 @@ for easy idiomatic error handling in Rust applications.
 [Error]: https://docs.rs/wallee/0.1/wallee/struct.Error.html
 
 This crate is a fork of [`anyhow`] with support for caller location tracking. This is useful when 
-debug information is not included in the build. THe caller location attached to [`wallee::Error`]
+debug information is not included in the build. The caller location attached to [`wallee::Error`]
 includes the file, line and column where the error originated.
 
 ```toml
