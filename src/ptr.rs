@@ -107,32 +107,11 @@ where
         }
     }
 
-    #[cfg(not(anyhow_no_ptr_addr_of))]
-    pub fn from_raw(ptr: NonNull<T>) -> Self {
-        RefPtr {
-            ptr,
-            lifetime: PhantomData,
-        }
-    }
-
     pub fn cast<U: CastTo>(self) -> RefPtr<'a, U::Target> {
         RefPtr {
             ptr: self.ptr.cast(),
             lifetime: PhantomData,
         }
-    }
-
-    #[cfg(not(anyhow_no_ptr_addr_of))]
-    pub fn by_mut(self) -> MutPtr<'a, T> {
-        MutPtr {
-            ptr: self.ptr,
-            lifetime: PhantomData,
-        }
-    }
-
-    #[cfg(not(anyhow_no_ptr_addr_of))]
-    pub fn as_ptr(self) -> *const T {
-        self.ptr.as_ptr() as *const T
     }
 
     pub fn as_ref(self) -> &'a T {
@@ -164,46 +143,17 @@ impl<'a, T> MutPtr<'a, T>
 where
     T: ?Sized,
 {
-    #[cfg(anyhow_no_ptr_addr_of)]
-    pub fn new(ptr: &'a mut T) -> Self {
+    pub fn cast<U: CastTo>(self) -> MutPtr<'a, U::Target> {
         MutPtr {
-            ptr: NonNull::from(ptr),
+            ptr: self.ptr.cast(),
             lifetime: PhantomData,
         }
     }
 
-    // pub fn cast<U: CastTo>(self) -> MutPtr<'a, U::Target> {
-    //     MutPtr {
-    //         ptr: self.ptr.cast(),
-    //         lifetime: PhantomData,
-    //     }
-    // }
-
-    #[cfg(not(anyhow_no_ptr_addr_of))]
-    pub fn by_ref(self) -> RefPtr<'a, T> {
-        RefPtr {
-            ptr: self.ptr,
-            lifetime: PhantomData,
-        }
-    }
-
-    // pub fn extend<'b>(self) -> MutPtr<'b, T> {
-    //     MutPtr {
-    //         ptr: self.ptr,
-    //         lifetime: PhantomData,
-    //     }
-    // }
-
-    pub unsafe fn as_mut(&mut self) -> &'a mut T {
+    pub fn as_mut(&mut self) -> &'a mut T {
         unsafe { self.ptr.as_mut() }
     }
 }
-
-// impl<'a, T> MutPtr<'a, T> {
-//     pub unsafe fn read(self) -> T {
-//         unsafe { self.ptr.as_ptr().read() }
-//     }
-// }
 
 // Force turbofish on all calls of `.cast::<U>()`.
 pub trait CastTo {

@@ -90,6 +90,7 @@ impl Error {
         let vtable = &ErrorVTable {
             object_drop: object_drop::<E>,
             object_ref: object_ref::<E>,
+            object_mut: object_mut::<E>,
             object_super: object_super::<E>,
             object_boxed: object_boxed::<E>,
             object_downcast: object_downcast::<E>,
@@ -112,6 +113,7 @@ impl Error {
         let vtable = &ErrorVTable {
             object_drop: object_drop::<MessageError<M>>,
             object_ref: object_ref::<MessageError<M>>,
+            object_mut: object_mut::<MessageError<M>>,
             object_super: object_super::<MessageError<M>>,
             object_boxed: object_boxed::<MessageError<M>>,
             object_downcast: object_downcast::<M>,
@@ -135,6 +137,7 @@ impl Error {
         let vtable = &ErrorVTable {
             object_drop: object_drop::<DisplayError<M>>,
             object_ref: object_ref::<DisplayError<M>>,
+            object_mut: object_mut::<DisplayError<M>>,
             object_super: object_super::<DisplayError<M>>,
             object_boxed: object_boxed::<DisplayError<M>>,
             object_downcast: object_downcast::<M>,
@@ -159,6 +162,7 @@ impl Error {
         let vtable = &ErrorVTable {
             object_drop: object_drop::<ContextError<C, E>>,
             object_ref: object_ref::<ContextError<C, E>>,
+            object_mut: object_mut::<ContextError<C, E>>,
             object_super: object_super::<ContextError<C, E>>,
             object_boxed: object_boxed::<ContextError<C, E>>,
             object_downcast: context_downcast::<C, E>,
@@ -181,6 +185,7 @@ impl Error {
         let vtable = &ErrorVTable {
             object_drop: object_drop::<BoxedError>,
             object_ref: object_ref::<BoxedError>,
+            object_mut: object_mut::<BoxedError>,
             object_super: object_super::<BoxedError>,
             object_boxed: object_boxed::<BoxedError>,
             object_downcast: object_downcast::<Box<dyn StdError + Send + Sync>>,
@@ -295,6 +300,7 @@ impl Error {
         let vtable = &ErrorVTable {
             object_drop: object_drop::<ContextError<C, Error>>,
             object_ref: object_ref::<ContextError<C, Error>>,
+            object_mut: object_mut::<ContextError<C, Error>>,
             object_super: object_super::<ContextError<C, Error>>,
             object_boxed: object_boxed::<ContextError<C, Error>>,
             object_downcast: context_chain_downcast::<C>,
@@ -563,7 +569,8 @@ impl Drop for Error {
 
 struct ErrorVTable {
     object_drop: unsafe fn(OwnPtr<ErrorImpl>),
-    object_ref: unsafe fn(RefPtr<ErrorImpl>) -> RefPtr<dyn StdError + Send + Sync + 'static>,
+    object_ref: unsafe fn(RefPtr<ErrorImpl>) -> &(dyn StdError + Send + Sync + 'static),
+    object_mut: unsafe fn(MutPtr<ErrorImpl>) -> &mut (dyn StdError + Send + Sync + 'static),
     object_super: unsafe fn(RefPtr<ErrorImpl>) -> &(dyn StdError + Send + Sync + 'static),
     object_boxed: unsafe fn(OwnPtr<ErrorImpl>) -> Box<dyn StdError + Send + Sync + 'static>,
     object_downcast: unsafe fn(OwnPtr<ErrorImpl>, TypeId) -> Option<OwnPtr<()>>,
@@ -590,17 +597,21 @@ unsafe fn object_drop_front<E>(e: OwnPtr<ErrorImpl>, target: TypeId) {
 }
 
 // Safety: requires layout of *e to match ErrorImpl<E>.
-unsafe fn object_ref<E>(e: RefPtr<ErrorImpl>) -> RefPtr<dyn StdError + Send + Sync + 'static>
+unsafe fn object_ref<E>(e: RefPtr<ErrorImpl>) -> &(dyn StdError + Send + Sync + 'static)
 where
     E: StdError + Send + Sync + 'static,
 {
     // Attach E's native StdError vtable onto a pointer to self._object.
+    &e.cast::<ErrorImpl<E>>().as_ref()._object
+}
 
-    let unerased_ref = e.cast::<ErrorImpl<E>>();
-
-    return RefPtr::from_raw(unsafe {
-        NonNull::new_unchecked(ptr::addr_of!((*unerased_ref.as_ptr())._object) as *mut E)
-    });
+// Safety: requires layout of *e to match ErrorImpl<E>.
+unsafe fn object_mut<E>(e: MutPtr<ErrorImpl>) -> &mut (dyn StdError + Send + Sync + 'static)
+where
+    E: StdError + Send + Sync + 'static,
+{
+    // Attach E's native StdError vtable onto a pointer to self._object.
+    &mut e.cast::<ErrorImpl<E>>().as_mut()._object
 }
 
 // Safety: requires layout of *e to match ErrorImpl<E>.
@@ -775,7 +786,7 @@ impl ErrorImpl {
     pub(crate) unsafe fn error(this: RefPtr<Self>) -> &(dyn StdError + Send + Sync + 'static) {
         // Use vtable to attach E's native StdError vtable for the right
         // original type E.
-        unsafe { (vtable(this.ptr).object_ref)(this).as_ref() }
+        unsafe { (vtable(this.ptr).object_ref)(this) }
     }
 
     pub(crate) unsafe fn error_mut(
@@ -783,12 +794,7 @@ impl ErrorImpl {
     ) -> &mut (dyn StdError + Send + Sync + 'static) {
         // Use vtable to attach E's native StdError vtable for the right
         // original type E.
-
-        return unsafe {
-            (vtable(this.ptr).object_ref)(this.by_ref())
-                .by_mut()
-                .as_mut()
-        };
+        unsafe { (vtable(this.ptr).object_mut)(this) }
     }
 
     pub(crate) unsafe fn as_super(this: RefPtr<Self>) -> &(dyn StdError + Send + Sync + 'static) {
@@ -836,11 +842,6 @@ where
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         unsafe { ErrorImpl::error(self.erase()).source() }
     }
-
-    #[cfg(error_generic_member_access)]
-    fn provide<'a>(&'a self, request: &mut Request<'a>) {
-        unsafe { ErrorImpl::provide(self.erase(), request) }
-    }
 }
 
 impl<E> Debug for ErrorImpl<E>
@@ -857,7 +858,7 @@ where
     E: Display,
 {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        unsafe { Display::fmt(ErrorImpl::error(self.erase()), formatter) }
+        unsafe { ErrorImpl::display(self.erase(), formatter) }
     }
 }
 
