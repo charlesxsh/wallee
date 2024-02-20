@@ -7,11 +7,11 @@
 //
 // Expressed in terms of specialization, we want something like:
 //
-//     trait AnyhowNew {
+//     trait WalleeNew {
 //         fn new(self) -> Error;
 //     }
 //
-//     impl<T> AnyhowNew for T
+//     impl<T> WalleeNew for T
 //     where
 //         T: Display + Debug + Send + Sync + 'static,
 //     {
@@ -20,7 +20,7 @@
 //         }
 //     }
 //
-//     impl<T> AnyhowNew for T
+//     impl<T> WalleeNew for T
 //     where
 //         T: std::error::Error + Send + Sync + 'static,
 //     {
@@ -49,52 +49,69 @@ use core::fmt::{Debug, Display};
 
 use crate::StdError;
 
-pub struct Adhoc;
+pub struct MakeDebug;
 
 #[doc(hidden)]
-pub trait AdhocKind: Sized {
+pub trait DebugKind: Sized {
     #[inline]
-    fn wallee_kind(&self) -> Adhoc {
-        Adhoc
+    fn wallee_kind(&self) -> MakeDebug {
+        MakeDebug
     }
 }
 
-impl<T> AdhocKind for &T where T: ?Sized + Display + Debug + Send + Sync + 'static {}
+impl<T> DebugKind for &T where T: ?Sized + Display + Debug + Send + Sync + 'static {}
 
-impl Adhoc {
+impl MakeDebug {
     #[cold]
     #[track_caller]
     pub fn make<M>(self, message: M) -> Error
     where
         M: Display + Debug + Send + Sync + 'static,
     {
-        Error::from_adhoc(message, backtrace!())
+        Error::from_debug(message, backtrace!())
     }
 }
 
-pub struct Trait;
+pub struct MakeStd;
 
 #[doc(hidden)]
-pub trait TraitKind: Sized {
+pub trait StdKind: Sized {
     #[inline]
-    fn wallee_kind(&self) -> Trait {
-        Trait
+    fn wallee_kind(&self) -> MakeStd {
+        MakeStd
     }
 }
 
-// impl<E> TraitKind for E where E: Into<Error> {}
-impl<E> TraitKind for E where Error: From<E> {}
+impl<E> StdKind for E where E: StdError + Send + Sync + 'static {}
 
-impl Trait {
+impl MakeStd {
     #[cold]
     #[track_caller]
     pub fn make<E>(self, error: E) -> Error
     where
-        // E: Into<Error>,
-        Error: From<E>,
+        E: StdError + Send + Sync + 'static,
     {
-        // error.into()
-        Error::from(error)
+        Error::new(error)
+    }
+}
+
+pub struct MakeError;
+
+#[doc(hidden)]
+pub trait ErrorKind: Sized {
+    #[inline]
+    fn wallee_kind(&self) -> MakeError {
+        MakeError
+    }
+}
+
+impl ErrorKind for Error {}
+
+impl MakeError {
+    #[cold]
+    #[track_caller]
+    pub fn make(self, error: Error) -> Error {
+        error
     }
 }
 

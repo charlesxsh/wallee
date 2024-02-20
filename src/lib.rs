@@ -607,10 +607,7 @@ pub mod __private {
     #[doc(hidden)]
     pub mod kind {
         #[doc(hidden)]
-        pub use crate::kind::{AdhocKind, TraitKind};
-
-        #[doc(hidden)]
-        pub use crate::kind::BoxedKind;
+        pub use crate::kind::{BoxedKind, DebugKind, ErrorKind, StdKind};
     }
 
     #[doc(hidden)]

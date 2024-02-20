@@ -78,7 +78,7 @@ impl Error {
     where
         M: Display + Debug + Send + Sync + 'static,
     {
-        Error::from_adhoc(message, backtrace!())
+        Error::from_debug(message, backtrace!())
     }
 
     #[cold]
@@ -104,7 +104,7 @@ impl Error {
 
     #[cold]
     #[track_caller]
-    pub(crate) fn from_adhoc<M>(message: M, backtrace: Option<Backtrace>) -> Self
+    pub(crate) fn from_debug<M>(message: M, backtrace: Option<Backtrace>) -> Self
     where
         M: Display + Debug + Send + Sync + 'static,
     {
