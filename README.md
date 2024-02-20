@@ -6,6 +6,10 @@ for easy idiomatic error handling in Rust applications.
 
 [Error]: https://docs.rs/wallee/0.1/wallee/struct.Error.html
 
+This crate is a fork of [`anyhow`] with support for caller location tracking. This is useful when 
+debug information is not included in the build. THe caller location attached to [`wallee::Error`]
+includes the file, line and column where the error originated.
+
 ```toml
 [dependencies]
 wallee = "0.1"
@@ -117,24 +121,6 @@ wallee = "0.1"
 
 <br>
 
-## No-std support
- 
-In no_std mode, the same API is almost all available and works the same way. To
-depend on Wallee in no_std mode, disable our default enabled "std" feature in
-Cargo.toml. A global allocator is required.
-
-```toml
-[dependencies]
-wallee = { version = "0.1", default-features = false }
-```
-
-Since the `?`-based error conversions would normally rely on the
-`std::error::Error` trait which is only available through std, no_std mode will
-require an explicit `.map_err(Error::msg)` when working with a non-Wallee error
-type inside a function that returns Wallee's error type.
-
-<br>
-
 ## Comparison to failure
 
 The `wallee::Error` type works something like `failure::Error`, but unlike
@@ -154,6 +140,7 @@ are a library that wants to design your own dedicated error type(s) so that on
 failures the caller gets exactly the information that you choose.
 
 [thiserror]: https://github.com/dtolnay/thiserror
+[`anyhow`]: https://github.com/dtolnay/anyhow
 
 <br>
 

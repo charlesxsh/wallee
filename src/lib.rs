@@ -9,9 +9,9 @@
 //! This library provides [`wallee::Error`][Error], a trait object based error
 //! type for easy idiomatic error handling in Rust applications.
 //!
-//! This crate is a fork of Wallee with support for
+//! This crate is a fork of [`anyhow`] with support for
 //! caller location tracking. This is useful when debug information is not included in the build.
-//! The caller location attached to [`wallee::Error`][Error] still includes the file, line and
+//! The caller location attached to [`wallee::Error`][Error] includes the file, line and
 //! column where the error originated.
 //!
 //! <br>
@@ -151,6 +151,7 @@
 //!   [thiserror].
 //!
 //!   [thiserror]: https://github.com/dtolnay/thiserror
+//!   [`anyhow`]: https://github.com/dtolnay/anyhow
 //!
 //!   ```
 //!   use thiserror::Error;
@@ -625,6 +626,22 @@ pub mod __private {
         } else {
             // wallee!("interpolate {var}"), can downcast to String
             Error::msg(fmt::format(args))
+        }
+    }
+
+    #[doc(hidden)]
+    #[inline]
+    #[cold]
+    #[track_caller]
+    pub fn format_context(error: Error, args: Arguments) -> Error {
+        let fmt_arguments_as_str = args.as_str();
+
+        if let Some(message) = fmt_arguments_as_str {
+            // wallee!("literal"), can downcast to &'static str
+            error.context(message)
+        } else {
+            // wallee!("interpolate {var}"), can downcast to String
+            error.context(fmt::format(args))
         }
     }
 
