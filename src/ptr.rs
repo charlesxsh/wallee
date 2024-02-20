@@ -35,6 +35,10 @@ where
         }
     }
 
+    pub fn from_raw(ptr: NonNull<T>) -> Self {
+        OwnPtr { ptr }
+    }
+
     pub fn cast<U: CastTo>(self) -> OwnPtr<U::Target> {
         OwnPtr {
             ptr: self.ptr.cast(),
@@ -43,6 +47,10 @@ where
 
     pub unsafe fn boxed(self) -> Box<T> {
         unsafe { Box::from_raw(self.ptr.as_ptr()) }
+    }
+
+    pub fn as_ptr(&self) -> *mut T {
+        self.ptr.as_ptr()
     }
 
     pub fn as_ref(&self) -> RefPtr<T> {
@@ -57,6 +65,14 @@ where
             ptr: self.ptr,
             lifetime: PhantomData,
         }
+    }
+
+    pub fn deref<'a>(&self) -> &'a T {
+        unsafe { self.ptr.as_ref() }
+    }
+
+    pub fn deref_mut<'a>(&mut self) -> &'a mut T {
+        unsafe { self.ptr.as_mut() }
     }
 }
 
@@ -156,12 +172,12 @@ where
         }
     }
 
-    pub fn cast<U: CastTo>(self) -> MutPtr<'a, U::Target> {
-        MutPtr {
-            ptr: self.ptr.cast(),
-            lifetime: PhantomData,
-        }
-    }
+    // pub fn cast<U: CastTo>(self) -> MutPtr<'a, U::Target> {
+    //     MutPtr {
+    //         ptr: self.ptr.cast(),
+    //         lifetime: PhantomData,
+    //     }
+    // }
 
     #[cfg(not(anyhow_no_ptr_addr_of))]
     pub fn by_ref(self) -> RefPtr<'a, T> {
@@ -171,23 +187,23 @@ where
         }
     }
 
-    pub fn extend<'b>(self) -> MutPtr<'b, T> {
-        MutPtr {
-            ptr: self.ptr,
-            lifetime: PhantomData,
-        }
-    }
+    // pub fn extend<'b>(self) -> MutPtr<'b, T> {
+    //     MutPtr {
+    //         ptr: self.ptr,
+    //         lifetime: PhantomData,
+    //     }
+    // }
 
-    pub unsafe fn deref_mut(self) -> &'a mut T {
-        unsafe { &mut *self.ptr.as_ptr() }
+    pub unsafe fn as_mut(&mut self) -> &'a mut T {
+        unsafe { self.ptr.as_mut() }
     }
 }
 
-impl<'a, T> MutPtr<'a, T> {
-    pub unsafe fn read(self) -> T {
-        unsafe { self.ptr.as_ptr().read() }
-    }
-}
+// impl<'a, T> MutPtr<'a, T> {
+//     pub unsafe fn read(self) -> T {
+//         unsafe { self.ptr.as_ptr().read() }
+//     }
+// }
 
 // Force turbofish on all calls of `.cast::<U>()`.
 pub trait CastTo {
