@@ -21,47 +21,55 @@ impl ErrorImpl {
         let error = unsafe { Self::error(this) };
         let location = unsafe { Self::location(this) };
 
+        if f.alternate() {
+            return f
+                .debug_struct("Wallee")
+                .field("file", &location.file())
+                .field("line", &location.line())
+                .field("column", &location.column())
+                .field("error", &error)
+                .finish();
+        }
+
         write!(
             f,
-            "{}({}:{}): {:?}",
+            "{}({}:{}): {}",
             location.file(),
             location.line(),
             location.column(),
             error
         )?;
 
-        if f.alternate() {
-            if let Some(cause) = error.source() {
-                write!(f, "\n\nCaused by:")?;
-                let multiple = cause.source().is_some();
-                for (n, error) in Chain::new(cause).enumerate() {
-                    writeln!(f)?;
-                    let mut indented = Indented {
-                        inner: f,
-                        number: if multiple { Some(n) } else { None },
-                        started: false,
-                    };
-                    write!(indented, "{:?}", error)?;
-                }
+        if let Some(cause) = error.source() {
+            write!(f, "\n\nCaused by:")?;
+            let multiple = cause.source().is_some();
+            for (n, error) in Chain::new(cause).enumerate() {
+                writeln!(f)?;
+                let mut indented = Indented {
+                    inner: f,
+                    number: if multiple { Some(n) } else { None },
+                    started: false,
+                };
+                write!(indented, "{}", error)?;
             }
+        }
 
-            use crate::backtrace::BacktraceStatus;
+        use crate::backtrace::BacktraceStatus;
 
-            let backtrace = unsafe { Self::backtrace(this) };
-            if let BacktraceStatus::Captured = backtrace.status() {
-                let mut backtrace = backtrace.to_string();
-                write!(f, "\n\n")?;
-                if backtrace.starts_with("stack backtrace:") {
-                    // Capitalize to match "Caused by:"
-                    backtrace.replace_range(0..1, "S");
-                } else {
-                    // "stack backtrace:" prefix was removed in
-                    // https://github.com/rust-lang/backtrace-rs/pull/286
-                    writeln!(f, "Stack backtrace:")?;
-                }
-                backtrace.truncate(backtrace.trim_end().len());
-                write!(f, "{}", backtrace)?;
+        let backtrace = unsafe { Self::backtrace(this) };
+        if let BacktraceStatus::Captured = backtrace.status() {
+            let mut backtrace = backtrace.to_string();
+            write!(f, "\n\n")?;
+            if backtrace.starts_with("stack backtrace:") {
+                // Capitalize to match "Caused by:"
+                backtrace.replace_range(0..1, "S");
+            } else {
+                // "stack backtrace:" prefix was removed in
+                // https://github.com/rust-lang/backtrace-rs/pull/286
+                writeln!(f, "Stack backtrace:")?;
             }
+            backtrace.truncate(backtrace.trim_end().len());
+            write!(f, "{}", backtrace)?;
         }
 
         Ok(())

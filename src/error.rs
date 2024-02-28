@@ -91,7 +91,7 @@ impl Error {
             object_drop: object_drop::<E>,
             object_ref: object_ref::<E>,
             object_mut: object_mut::<E>,
-            object_super: object_super::<E>,
+            // object_super: object_super::<E>,
             object_boxed: object_boxed::<E>,
             object_downcast: object_downcast::<E>,
             object_drop_rest: object_drop_front::<E>,
@@ -114,7 +114,7 @@ impl Error {
             object_drop: object_drop::<MessageError<M>>,
             object_ref: object_ref::<MessageError<M>>,
             object_mut: object_mut::<MessageError<M>>,
-            object_super: object_super::<MessageError<M>>,
+            // object_super: object_super::<MessageError<M>>,
             object_boxed: object_boxed::<MessageError<M>>,
             object_downcast: object_downcast::<M>,
             object_drop_rest: object_drop_front::<M>,
@@ -138,7 +138,7 @@ impl Error {
             object_drop: object_drop::<DisplayError<M>>,
             object_ref: object_ref::<DisplayError<M>>,
             object_mut: object_mut::<DisplayError<M>>,
-            object_super: object_super::<DisplayError<M>>,
+            // object_super: object_super::<DisplayError<M>>,
             object_boxed: object_boxed::<DisplayError<M>>,
             object_downcast: object_downcast::<M>,
             object_drop_rest: object_drop_front::<M>,
@@ -163,7 +163,7 @@ impl Error {
             object_drop: object_drop::<ContextError<C, E>>,
             object_ref: object_ref::<ContextError<C, E>>,
             object_mut: object_mut::<ContextError<C, E>>,
-            object_super: object_super::<ContextError<C, E>>,
+            // object_super: object_super::<ContextError<C, E>>,
             object_boxed: object_boxed::<ContextError<C, E>>,
             object_downcast: context_downcast::<C, E>,
             object_drop_rest: context_drop_rest::<C, E>,
@@ -186,7 +186,7 @@ impl Error {
             object_drop: object_drop::<BoxedError>,
             object_ref: object_ref::<BoxedError>,
             object_mut: object_mut::<BoxedError>,
-            object_super: object_super::<BoxedError>,
+            // object_super: object_super::<BoxedError>,
             object_boxed: object_boxed::<BoxedError>,
             object_downcast: object_downcast::<Box<dyn StdError + Send + Sync>>,
             object_drop_rest: object_drop_front::<Box<dyn StdError + Send + Sync>>,
@@ -301,7 +301,7 @@ impl Error {
             object_drop: object_drop::<ContextError<C, Error>>,
             object_ref: object_ref::<ContextError<C, Error>>,
             object_mut: object_mut::<ContextError<C, Error>>,
-            object_super: object_super::<ContextError<C, Error>>,
+            // object_super: object_super::<ContextError<C, Error>>,
             object_boxed: object_boxed::<ContextError<C, Error>>,
             object_downcast: context_chain_downcast::<C>,
             object_drop_rest: context_chain_drop_rest::<C>,
@@ -553,8 +553,8 @@ impl Display for Error {
 }
 
 impl Debug for Error {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        unsafe { ErrorImpl::debug(self.inner.as_ref(), formatter) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        unsafe { ErrorImpl::debug(self.inner.as_ref(), f) }
     }
 }
 
@@ -571,7 +571,7 @@ struct ErrorVTable {
     object_drop: unsafe fn(OwnPtr<ErrorImpl>),
     object_ref: unsafe fn(RefPtr<ErrorImpl>) -> &(dyn StdError + Send + Sync + 'static),
     object_mut: unsafe fn(MutPtr<ErrorImpl>) -> &mut (dyn StdError + Send + Sync + 'static),
-    object_super: unsafe fn(RefPtr<ErrorImpl>) -> &(dyn StdError + Send + Sync + 'static),
+    // object_super: unsafe fn(RefPtr<ErrorImpl>) -> &(dyn StdError + Send + Sync + 'static),
     object_boxed: unsafe fn(OwnPtr<ErrorImpl>) -> Box<dyn StdError + Send + Sync + 'static>,
     object_downcast: unsafe fn(OwnPtr<ErrorImpl>, TypeId) -> Option<OwnPtr<()>>,
     object_drop_rest: unsafe fn(OwnPtr<ErrorImpl>, TypeId),
@@ -615,13 +615,13 @@ where
 }
 
 // Safety: requires layout of *e to match ErrorImpl<E>.
-unsafe fn object_super<E>(e: RefPtr<ErrorImpl>) -> &(dyn StdError + Send + Sync + 'static)
-where
-    E: StdError + Send + Sync + 'static,
-{
-    // Attach ErrorImpl<E>'s native StdError vtable. The StdError impl is below.
-    e.cast::<ErrorImpl<E>>().as_ref()
-}
+// unsafe fn object_super<E>(e: RefPtr<ErrorImpl>) -> &(dyn StdError + Send + Sync + 'static)
+// where
+//     E: StdError + Send + Sync + 'static,
+// {
+//     // Attach ErrorImpl<E>'s native StdError vtable. The StdError impl is below.
+//     e.cast::<ErrorImpl<E>>().as_ref()
+// }
 
 // Safety: requires layout of *e to match ErrorImpl<E>.
 unsafe fn object_boxed<E>(e: OwnPtr<ErrorImpl>) -> Box<dyn StdError + Send + Sync + 'static>
@@ -797,9 +797,9 @@ impl ErrorImpl {
         unsafe { (vtable(this.ptr).object_mut)(this) }
     }
 
-    pub(crate) unsafe fn as_super(this: RefPtr<Self>) -> &(dyn StdError + Send + Sync + 'static) {
-        unsafe { (vtable(this.ptr).object_super)(this) }
-    }
+    // pub(crate) unsafe fn as_super(this: RefPtr<Self>) -> &(dyn StdError + Send + Sync + 'static) {
+    //     unsafe { (vtable(this.ptr).object_super)(this) }
+    // }
 
     pub(crate) unsafe fn backtrace(this: RefPtr<Self>) -> &Backtrace {
         // This unwrap can only panic if the underlying error's backtrace method
