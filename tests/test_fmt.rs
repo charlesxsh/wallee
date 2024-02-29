@@ -36,9 +36,7 @@ Caused by:
 
 const EXPECTED_ALTDEBUG_F: &str = "\
 Wallee {
-    file: \"tests/test_fmt.rs\",
-    line: 5,
-    column: 5,
+    location: \"tests/test_fmt.rs(5:5)\",
     error: Custom {
         kind: PermissionDenied,
         error: \"oh no!\",
@@ -47,15 +45,11 @@ Wallee {
 
 const EXPECTED_ALTDEBUG_G: &str = "\
 Wallee {
-    file: \"tests/test_fmt.rs\",
-    line: 9,
-    column: 9,
+    location: \"tests/test_fmt.rs(9:9)\",
     error: Error {
         context: \"f failed\",
         source: Wallee {
-            file: \"tests/test_fmt.rs\",
-            line: 5,
-            column: 5,
+            location: \"tests/test_fmt.rs(5:5)\",
             error: Custom {
                 kind: PermissionDenied,
                 error: \"oh no!\",
@@ -66,21 +60,15 @@ Wallee {
 
 const EXPECTED_ALTDEBUG_H: &str = "\
 Wallee {
-    file: \"tests/test_fmt.rs\",
-    line: 13,
-    column: 9,
+    location: \"tests/test_fmt.rs(13:9)\",
     error: Error {
         context: \"g failed\",
         source: Wallee {
-            file: \"tests/test_fmt.rs\",
-            line: 9,
-            column: 9,
+            location: \"tests/test_fmt.rs(9:9)\",
             error: Error {
                 context: \"f failed\",
                 source: Wallee {
-                    file: \"tests/test_fmt.rs\",
-                    line: 5,
-                    column: 5,
+                    location: \"tests/test_fmt.rs(5:5)\",
                     error: Custom {
                         kind: PermissionDenied,
                         error: \"oh no!\",

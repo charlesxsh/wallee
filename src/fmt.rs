@@ -24,9 +24,15 @@ impl ErrorImpl {
         if f.alternate() {
             return f
                 .debug_struct("Wallee")
-                .field("file", &location.file())
-                .field("line", &location.line())
-                .field("column", &location.column())
+                .field(
+                    "location",
+                    &format!(
+                        "{}({}:{})",
+                        location.file(),
+                        location.line(),
+                        location.column()
+                    ),
+                )
                 .field("error", &error)
                 .finish();
         }
