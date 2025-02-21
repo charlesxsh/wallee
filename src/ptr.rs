@@ -85,9 +85,9 @@ where
     lifetime: PhantomData<&'a T>,
 }
 
-impl<'a, T> Copy for RefPtr<'a, T> where T: ?Sized {}
+impl<T> Copy for RefPtr<'_, T> where T: ?Sized {}
 
-impl<'a, T> Clone for RefPtr<'a, T>
+impl<T> Clone for RefPtr<'_, T>
 where
     T: ?Sized,
 {
@@ -128,9 +128,9 @@ where
     lifetime: PhantomData<&'a mut T>,
 }
 
-impl<'a, T> Copy for MutPtr<'a, T> where T: ?Sized {}
+impl<T> Copy for MutPtr<'_, T> where T: ?Sized {}
 
-impl<'a, T> Clone for MutPtr<'a, T>
+impl<T> Clone for MutPtr<'_, T>
 where
     T: ?Sized,
 {
