@@ -10,7 +10,7 @@ impl ErrorImpl {
         if f.alternate() {
             let chain = unsafe { Self::chain(this) };
             for cause in chain.skip(1) {
-                write!(f, ": {}", cause)?;
+                write!(f, ": {cause}")?;
             }
         }
 
@@ -56,7 +56,7 @@ impl ErrorImpl {
                     number: if multiple { Some(n) } else { None },
                     started: false,
                 };
-                write!(indented, "{}", error)?;
+                write!(indented, "{error}")?;
             }
         }
 
@@ -75,7 +75,7 @@ impl ErrorImpl {
                 writeln!(f, "Stack backtrace:")?;
             }
             backtrace.truncate(backtrace.trim_end().len());
-            write!(f, "{}", backtrace)?;
+            write!(f, "{backtrace}")?;
         }
 
         Ok(())
@@ -97,7 +97,7 @@ where
             if !self.started {
                 self.started = true;
                 match self.number {
-                    Some(number) => write!(self.inner, "{: >5}: ", number)?,
+                    Some(number) => write!(self.inner, "{number: >5}: ")?,
                     None => self.inner.write_str("    ")?,
                 }
             } else if i > 0 {

@@ -4,7 +4,7 @@ use wallee::wallee;
 
 #[no_mangle]
 pub extern "C" fn wallee1(err: wallee::Error) {
-    println!("{:?}", err);
+    println!("{err:?}");
 }
 
 #[no_mangle]

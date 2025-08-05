@@ -1,6 +1,6 @@
 [package]
 name = "wallee"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["David Tolnay <dtolnay@gmail.com>", "Todd Hardman <todd.hardman@gmail.com>"]
 categories = ["rust-patterns", "no-std"]
 description = "Flexible concrete Error type built on std::error::Error with caller location tracking"
@@ -13,11 +13,11 @@ rust-version = "1.76"
 
 [dev-dependencies]
 futures = { version = "0.3", default-features = false }
-rustversion = "1.0.6"
+rustversion = "1.0.21"
 syn = { version = "2.0", features = ["full"] }
-thiserror = "2.0.11"
-anyhow = "1.0.80"
-trybuild = { version = "1.0.66", features = ["diff"] }
+thiserror = "2.0.12"
+anyhow = "1.0.98"
+trybuild = { version = "1.0.110", features = ["diff"] }
 
 [lib]
 doc-scrape-examples = false

@@ -80,9 +80,9 @@ impl Write for Buf {
 
 fn render(msg: &'static str, lhs: &dyn Debug, rhs: &dyn Debug) -> Error {
     let mut lhs_buf = Buf::new();
-    if fmt::write(&mut lhs_buf, format_args!("{:?}", lhs)).is_ok() {
+    if fmt::write(&mut lhs_buf, format_args!("{lhs:?}")).is_ok() {
         let mut rhs_buf = Buf::new();
-        if fmt::write(&mut rhs_buf, format_args!("{:?}", rhs)).is_ok() {
+        if fmt::write(&mut rhs_buf, format_args!("{rhs:?}")).is_ok() {
             let lhs_str = lhs_buf.as_str();
             let rhs_str = rhs_buf.as_str();
             // "{msg} ({lhs} vs {rhs})"

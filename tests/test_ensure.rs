@@ -584,7 +584,7 @@ fn test_as() {
 
     extern "C" fn extern_fn() {}
     #[rustfmt::skip]
-    let test = || Ok(ensure!(extern_fn as extern fn() as usize * 0 != 0));
+    let test = || Ok(ensure!(extern_fn as extern "C" fn() as usize * 0 != 0));
     assert_err(
         test,
         "Condition failed: `extern_fn as extern fn() as usize * 0 != 0` (0 vs 0)",
